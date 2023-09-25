@@ -305,13 +305,15 @@ class ANMX_data(PropertyGroup):
                     anmx.use_xray = False if anmx.in_front else True
         return
 
-    def set_onionobject_from_rig(self, context):
+    def update_onionobject_from_rig(self, context):
         anmx = context.scene.anmx_data
         # print(type(anmx.set_onion_object))
         # print(anmx.set_onion_object)
         # print("self %s" % anmx.get_rig_childs(context)[int(anmx.set_onion_object)])
         # print("self %s" % (anmx.get_rig_childs(self["set_onion_object"][1])))
         context.scene.anmx_data.onion_object = anmx.set_onion_object
+        if anmx.auto_update:
+            bpy.ops.anim_extras.update_onion()
 
     def get_rig_childs(self, context):
         rig_child_list = []
@@ -345,7 +347,7 @@ class ANMX_data(PropertyGroup):
     skin_count: bpy.props.IntProperty(name="Count", description="Number of frames we see in past and future", default=1, min=1) # works without update update=update_onion) We cant update if anmx_data is not made yet?!
     skin_step: bpy.props.IntProperty(name="Step", description="Number of frames to skip in conjuction with Count", default=1, min=1, update=update_onion) #, updaet=update_onion)
     onion_object: bpy.props.StringProperty(name="Onion Object", default="")
-    set_onion_object: bpy.props.EnumProperty(name="Set Onion Object", items = get_rig_childs, update=set_onionobject_from_rig)
+    set_onion_object: bpy.props.EnumProperty(name="Set Onion Object", items = get_rig_childs, update=update_onionobject_from_rig)
     onion_mode: bpy.props.EnumProperty(name="", get=None, set=None, items=modes)
     use_xray: bpy.props.BoolProperty(name="Use X-Ray", description="Draws the onion visible through the object", default=False)
     use_flat: bpy.props.BoolProperty(name="Flat Colors", description="Colors while not use opacity showing 100% of the color", default=False)
@@ -556,7 +558,7 @@ class ANMX_draw_meshes(Operator):
         autok = scn.tool_settings.use_keyframe_insert_auto
         
         # Auto Keying-pose mode 
-        if self.mode != anmx.onion_mode and anmx.auto_update and (anmx.anmx_auto_key and autok):
+        if self.mode != anmx.onion_mode and anmx.auto_update and autok: #(anmx.anmx_auto_key and autok):
             self.mode = anmx.onion_mode
             bpy.ops.anim_extras.update_onion()
             pass
@@ -565,7 +567,7 @@ class ANMX_draw_meshes(Operator):
             self.mode = anmx.onion_mode
             bpy.ops.anim_extras.update_onion()
             pass
-        # Also auto update for modes onlu
+        # Also auto update for modes only
         if self.mode != anmx.onion_mode:
             self.mode = anmx.onion_mode
             bpy.ops.anim_extras.update_onion()
