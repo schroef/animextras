@@ -54,10 +54,11 @@ class ANMX_gui(bpy.types.Panel):
         col = layout.column()
         # col.prop(anmx,"onion_object", text="Current", emboss=False, icon='OUTLINER_OB_MESH') #text="{}".format(anmx.onion_object), 
         # Issue when using emboss=false > the whole column receives this. Feels like a API bug
-        if not obj.type == 'ARMATURE':
-            col.label(text="Please select RIG", icon='INFO')
-            # return
-        else:
+        # Dirty if else, otherwise shows error on not obj ob
+        try:
+            if not obj.type == 'ARMATURE':
+                col.label(text="Please select RIG", icon='INFO')
+        except:
             col.prop(anmx,"set_onion_object", text="Onion Object", icon='OUTLINER_OB_MESH') #text="{}".format(anmx.onion_object), 
         
         col = layout.column()

@@ -73,10 +73,24 @@ def frame_get_set(_obj, frame):
             _obj = bpy.context.selected_objects[0]
         
         # print("_obj %s" % _obj)
+        # Linked Rig
         if anmx.is_linked:
             if not "_animextras" in bpy.data.collections['_animextras']:
                 bpy.ops.object.make_override_library()
+                # Force visibly armature so we can use set_onion_object
+                for col in bpy.data.collections:
+                    if 'Hidden 11' in col.name:
+                        # bpy.data.collections['Hidden 11'].hide_render = False
+                        bpy.data.collections[col.name].hide_viewport = False
+                        if bpy.data.collections[anmx.onion_object]:
+                            for rig in bpy.data.collections[anmx.onion_object].all_objects:
+                                # print("rig.type %s" % rig.type)
+                                if rig.type == 'ARMATURE':
+                                    bpy.context.view_layer.objects.active = bpy.data.objects[rig.name]
+                                    anmx.rig_object = rig.name
+
                 for ob in bpy.context.selected_objects:
+                    ob.hide_viewport = False
                     if not ob.name in bpy.data.collections['_animextras'].all_objects:
                         bpy.data.collections['_animextras'].objects.link(ob)
                 # bpy.ops.object.move_to_collection(collection_index=2)
@@ -86,16 +100,25 @@ def frame_get_set(_obj, frame):
                     new_onion = i.name
                     i.hide_render = True
 
+            # bpy.context.area.tag_redraw()
+
+            # Make object active so panel shows
+            bpy.context.view_layer.objects.active = bpy.data.objects[anmx.rig_object]
+        
             scn.anmx_data.onion_object = new_onion
+            scn.anmx_data.set_onion_object = new_onion # Test if we can select mesh by using loop count
             anmx.is_linked = False
 
         # Return duplicated linked rig made local     
         _obj =  bpy.data.objects[anmx.onion_object]
         
-        # Make object active so panel shows
-        bpy.context.view_layer.objects.active = _obj
-        # Select active
-        # bpy.context.scene.objects["Body"].select_set(True)
+        # Dirty workaround, the GUI doesnt seem to be updated at this point
+        try:
+            # Make object active so panel shows
+            bpy.context.view_layer.objects.active = bpy.data.objects[anmx.rig_object]
+        except:
+            pass
+
        
 	# Gets all of the data from a mesh on a certain frame
     tmpobj = _obj
@@ -167,13 +190,14 @@ def set_to_active(_obj):
         if hasattr(anmx,"link_parent"):
             if not anmx.link_parent:
                 anmx.link_parent = _obj.name
+                # anmx.rig_object = _obj.parent.name
 
     bake_frames()
     make_batches()
 
 
 def clear_active(clrObj=False,clrRig=False):
-    """ clrRig will do complete clear, sued with linked Rigs, allows to update it without deleting everuthing """
+    """ clrRig will do complete clear, used with linked Rigs, allows to update it without deleting everything """
     """ Clears the active object """ 
 
     scn = bpy.context.scene
@@ -201,6 +225,7 @@ def clear_active(clrObj=False,clrRig=False):
     # Gets rid of the selected object
     if clrObj:
         anmx.onion_object = ""
+        anmx.rig_object = ""
     # if ANMX_draw_meshes.handler is not None:
     #     ANMX_draw_meshes.finish(None,bpy.context)
 
@@ -347,6 +372,7 @@ class ANMX_data(PropertyGroup):
     skin_count: bpy.props.IntProperty(name="Count", description="Number of frames we see in past and future", default=1, min=1) # works without update update=update_onion) We cant update if anmx_data is not made yet?!
     skin_step: bpy.props.IntProperty(name="Step", description="Number of frames to skip in conjuction with Count", default=1, min=1, update=update_onion) #, updaet=update_onion)
     onion_object: bpy.props.StringProperty(name="Onion Object", default="")
+    rig_object: bpy.props.StringProperty(name="Rig Object", default="")
     set_onion_object: bpy.props.EnumProperty(name="Set Onion Object", items = get_rig_childs, update=update_onionobject_from_rig)
     onion_mode: bpy.props.EnumProperty(name="", get=None, set=None, items=modes)
     use_xray: bpy.props.BoolProperty(name="Use X-Ray", description="Draws the onion visible through the object", default=False)
