@@ -58,8 +58,11 @@ class ANMX_gui(bpy.types.Panel):
         try:
             if not obj.type == 'ARMATURE':
                 col.label(text="Please select RIG", icon='INFO')
+            else:
+                col.prop(anmx,"set_onion_object", text="Onion Object", icon='OUTLINER_OB_MESH') #text="{}".format(anmx.onion_object), 
         except:
-            col.prop(anmx,"set_onion_object", text="Onion Object", icon='OUTLINER_OB_MESH') #text="{}".format(anmx.onion_object), 
+            col.label(text="THIS SHOULD NOT HAPPEN!", icon='INFO')
+        
         
         col = layout.column()
         col.prop(anmx, "onion_mode", text="Method")
